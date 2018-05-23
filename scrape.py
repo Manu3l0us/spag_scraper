@@ -1,11 +1,9 @@
 #!/usr/bin/python3
-import time
 import logging
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
-
-#Logging setup
+# Logging setup
 logger = logging.getLogger('spag_scraper')
 logger.setLevel(logging.DEBUG)
 logger.setLevel(logging.INFO)
@@ -32,9 +30,7 @@ matching_dict = {
     "Arbeitgeber": "arbeitgeber",
     "Auftraggeber": "auftraggeber",
     "Interessenbindungen": "interessenb",
-    "Unternehmen": "unternehmen",
 }
-
 
 
 class Matcher:
@@ -50,16 +46,17 @@ class Matcher:
 
     def get_tag(self):
         return self.class_prefix + self.tag
-    
+
     def parse(self, content):
         if self.listing:
             return content.text.strip()
             print(content)
-            content.find_all("li")            
+            content.find_all("li")
             list_soup = BeautifulSoup(content, "lxml")
             list_soup.find_all("li")
         else:
             return content.text.strip()
+
 
 matchers = [
     Matcher("Name", "name"),
@@ -78,8 +75,7 @@ for page_number in range(5):
     page = urlopen(url).read()
     soup = BeautifulSoup(page, "lxml")
 
-
-    tables = soup.find_all("table", { "class" : "views-view-grid cols-4" })
+    tables = soup.find_all("table", {"class": "views-view-grid cols-4"})
     for table in tables:
         table_body = table.find('tbody')
         try:
@@ -92,7 +88,6 @@ for page_number in range(5):
         except:
             logger.error("no tbody")
 
-
 logger.info("Members found in index: %u" % len(member_page_urls))
 
 for member_page_url in member_page_urls:
@@ -100,17 +95,16 @@ for member_page_url in member_page_urls:
     member_page = urlopen(member_page_url).read()
 
     member_soup = BeautifulSoup(member_page, "lxml")
-    
+
     for matcher in matchers:
         matching_tag = matcher.get_tag()
         logger.debug(f"Matching for tag {matching_tag}")
-    
-        entry_content = member_soup.find_all("div", { "class" : matching_tag})
-        assert(len(entry_content) < 2)
+
+        entry_content = member_soup.find_all("div", {"class": matching_tag})
+        assert (len(entry_content) < 2)
         for content in entry_content:
-            content = matcher.parse(content)
-            logger.info(f"{matcher.get_key()} found: {content}")
-    
+            parsed_content = matcher.parse(content)
+            logger.info(f"{matcher.get_key()} found: {parsed_content}")
 
 test_data = """    
   <div class="views-field views-field-field-mitglied-name">        <div class="field-content"><h1 id="page-title" class="page__title title"> Sacra Tomisawa-Schumacher, Vorstand</h1></div>  </div>  
